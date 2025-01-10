@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autism Chatbot</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Autism Support Chatbot</h1>
+        <div id="chat-box" class="chat-box">
+            <div id="messages"></div>
+        </div>
+        <form id="chat-form">
+            <input type="text" id="user-message" placeholder="Type your question here..." autocomplete="off">
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script>
+        const sessionId = uuid.v4(); // Generate a unique session ID
+        const chatBox = document.getElementById("messages");
+        const chatForm = document.getElementById("chat-form");
+        const userMessageInput = document.getElementById("user-message");
+
+        chatForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const userMessage = userMessageInput.value.trim();
+            if (!userMessage) return;
+
+            // Display user's message
+            const userBubble = document.createElement("div");
+            userBubble.className = "message user-message";
+            userBubble.textContent = userMessage;
+            chatBox.appendChild(userBubble);
+
+            // Clear input field
+            userMessageInput.value = "";
+
+            // Send message to the chatbot
+            try {
+                const response = await fetch("/send_message", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userMessage, session_id: sessionId }),
+                });
+                const data = await response.json();
+                const botMessage = document.createElement("div");
+                botMessage.className = "message bot-message";
+                botMessage.textContent = data.response || "Error: " + data.error;
+                chatBox.appendChild(botMessage);
+
+                // Scroll to the bottom
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
